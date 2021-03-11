@@ -40,7 +40,7 @@ To train LSUN from scratch, we refer to [fyu/lsun](https://github.com/fyu/lsun.g
 Define all the args and run [train.py](./train.py). Sample args for standard GAN and Wasserstein GAN are in [args.py](./args.py)  
 The model checkpoints and generated images will be saved under `./output/<model type>/<generator type>_<discriminator type>_<datasetname>/`
 
-### Generate fake image use pre-trained models
+### Generate fake images use pre-trained models
 
 Specify the saved generator state_dict path in `args` and run the `test.py` accordingly.  
 The generated images are saved under `./output/<model type>/<generator type>_<discriminator type>_<datasetname>/test_imgs/`
