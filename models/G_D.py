@@ -149,6 +149,7 @@ class DiscriminatorMLPWasserstein(nn.Module):
     def forward(self, img):
         img_flat = img.view(img.size(0), -1)
         validity = self.model(img_flat)
+        validity = validity.mean(0)
 
         return validity
 
@@ -251,7 +252,7 @@ class DiscriminatorDCWasserstein(nn.Module):
 
     def forward(self, img):
         output = self.main(img)
-
-        output = output.squeeze()  # (batch_size,)  the two-class predicted score 1 for real 0 for fake
+        output = output.mean(0)
+        # output = output.squeeze()  # (batch_size,)  the two-class predicted score 1 for real 0 for fake
         # print('discriminator', output.size())
-        return output
+        return output.view(1)

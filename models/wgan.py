@@ -10,9 +10,10 @@ def train(dataloader, args, datasetname):
     # whether to use cuda
     cuda = True if torch.cuda.is_available() else False
     Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
-
+    one = Tensor([1])
+    mone = one * -1
     # output dir to save generated images
-    output_dir = "./output/wgan/" + args.generator_type+'_'+args.discriminator_type+'_'+datasetname
+    output_dir = "./output/wgan/" + str(args.lr)+'_'+args.generator_type+'_'+args.discriminator_type+'_'+datasetname
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
 
@@ -64,14 +65,10 @@ def train(dataloader, args, datasetname):
     gen_iterations = 0
     for epoch in range(args.n_epochs):
         for i, imgs in enumerate(dataloader):
-            if isinstance(imgs,tuple):
+            if isinstance(imgs,list):
                 imgs = imgs[0]
             # Configure input
             real_imgs = Variable(imgs.type(Tensor))
-            if gen_iterations < 25 or gen_iterations % 500 == 0:  # a warm up at the first 25 iterations train discriminator more
-                Diters = 100
-            else:
-                Diters = args.n_critic
             # Sample noise as generator input
             z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], args.latent_dim))))
 
@@ -79,25 +76,32 @@ def train(dataloader, args, datasetname):
             #  Train Discriminator
             # ---------------------
             for p in discriminator.parameters(): # reset requires_grad
-                p.requires_grad = True # they are set to False below in netG update
+                p.requires_grad = True # they are set to False below in generator update
+            for p in generator.parameters(): # reset requires_grad
+                p.requires_grad = False # they are set to True below in generator update
             # we train the discriminator more than the generator
-            for j in range(Diters):
-                optimizer_D.zero_grad()
-
-                noise = z.normal_(0, 1)
-                noisev = Variable(noise, volatile=True)  # totally freeze generator
-
-                # Generate a batch of images
-                fake_imgs = generator(noisev).detach()
-                # Adversarial loss
-                loss_D = -torch.mean(discriminator(real_imgs)) + torch.mean(discriminator(fake_imgs))
-
-                loss_D.backward()
-                optimizer_D.step()
-
+            for j in range(args.n_critic):
                 # Clip weights of discriminator
                 for p in discriminator.parameters():
                     p.data.clamp_(-args.clip_value, args.clip_value)
+                # optimizer_D.zero_grad()
+                discriminator.zero_grad()
+
+                # real loss
+                errD_real = discriminator(real_imgs)
+                errD_real.backward(one)
+
+                # Generate a batch of images
+                fake_imgs = Variable(generator(z).data)
+
+                errD_fake = discriminator(fake_imgs)
+                errD_fake.backward(mone)
+
+                errD = errD_real - errD_fake
+                optimizer_D.step()
+
+
+
 
             # Train the generator every n_critic iterations
             # -----------------
@@ -105,29 +109,27 @@ def train(dataloader, args, datasetname):
             # -----------------
             for p in discriminator.parameters(): # reset requires_grad
                 p.requires_grad = False # they are set to False in generator update
-
-            optimizer_G.zero_grad()
-            noise = z.normal_(0, 1)
-            noisev = Variable(noise)
+            for p in generator.parameters(): # reset requires_grad
+                p.requires_grad = True # they are set to True in generator update
+            generator.zero_grad()
             # Generate a batch of images
-            gen_imgs = generator(noisev)
+            gen_imgs = generator(z)
             # Adversarial loss
-            loss_G = -torch.mean(discriminator(gen_imgs))
-
-            loss_G.backward()
+            errG = discriminator(gen_imgs)
+            errG.backward(one)
             optimizer_G.step()
 
             print(
                 "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
                 % (
-                epoch, args.n_epochs, batches_done % len(dataloader), len(dataloader), loss_D.item(), loss_G.item())
+                epoch, args.n_epochs, batches_done % len(dataloader), len(dataloader), errD.item(), errG.item())
             )
 
             # save checkpoint and generated images
             batches_done = epoch * len(dataloader) + i
             if batches_done % args.sample_interval == 0:
-                save_image(gen_imgs.data[:25],os.path.join(output_dir,f"{batches_done}_lossd_{loss_D}_loss_g_{loss_G}.jpg"), nrow=5, normalize=True)
-            if batches_done % 10000 == 0:
+                save_image(gen_imgs.data[:25],os.path.join(output_dir,f"{batches_done}_lossd_{errD.item()}_loss_g_{errG.item()}.jpg"), nrow=5, normalize=True)
+            if batches_done % args.sample_interval == 0:
                 torch.save(generator.state_dict(),
                            os.path.join(output_dir, f"{batches_done}_wgan_generator_checkpoint.pt"))
                 torch.save(discriminator.state_dict(),

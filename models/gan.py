@@ -9,7 +9,7 @@ from models.G_D import GeneratorDC, GeneratorMLP, DiscriminatorDCstandard, Discr
 
 
 def train(dataloader, args, datasetname):
-    output_dir = "./output/gan/" + args.generator_type+'_'+args.discriminator_type+'_'+datasetname
+    output_dir = "./output/gan/" + str(args.lr)+'_'+args.generator_type+'_'+args.discriminator_type+'_'+datasetname
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     # Loss function
@@ -70,7 +70,7 @@ def train(dataloader, args, datasetname):
     discriminator.train()
     for epoch in range(args.n_epochs):
         for i, imgs in enumerate(dataloader):
-            if isinstance(imgs,tuple):
+            if isinstance(imgs,list):
                 imgs = imgs[0]
             # Adversarial ground truths
             valid = Variable(Tensor(imgs.size(0), 1).fill_(1.0), requires_grad=False)
@@ -115,7 +115,7 @@ def train(dataloader, args, datasetname):
             batches_done = epoch * len(dataloader) + i
             if batches_done % args.sample_interval == 0:
                 save_image(gen_imgs.data[:25], os.path.join(output_dir,f"{batches_done}_lossd_{d_loss}_loss_g_{g_loss}.jpg"), nrow=5, normalize=True)
-            if batches_done % 10000 == 0:
+            if batches_done % args.sample_interval == 0:
                 torch.save(generator.state_dict(),
                            os.path.join(output_dir, f"{batches_done}_gan_generator_checkpoint.pt"))
                 torch.save(discriminator.state_dict(),

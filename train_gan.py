@@ -16,8 +16,10 @@ def main(args):
         dataset = Lsundaset(args.data_file_folder)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
     elif args.datasetname == 'mnist':
-        dataloader = torch.utils.data.DataLoader(datasets.MNIST('./dataset/', train=True, download=True,
+        dataloader = torch.utils.data.DataLoader(datasets.MNIST('../dataset/', train=True, download=True,
                                                                          transform=transforms.Compose([
+                                                                             transforms.Resize(
+                                                                                 (args.img_size, args.img_size)),
                                                                            transforms.ToTensor(),
                                                                            transforms.Normalize(
                                                                              (0.5,), (0.5,))
@@ -34,7 +36,7 @@ def main(args):
     else:
         raise NotImplementedError("the model type is currently not available. please choose model type as gan/dcgan/wgan")
 if __name__ == '__main__':
+    os.environ["CUDA_VISIBLE_DEVICES"] = '2'
     parser = gan_args()
-    # parser = wgan_args()
     args = parser.parse_args()
     main(args)
