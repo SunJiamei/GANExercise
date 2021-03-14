@@ -46,6 +46,26 @@ Specify the saved generator state_dict path in `args` and run the `test.py` acco
 The generated images are saved under `./output/<model type>/<generator type>_<discriminator type>_<datasetname>/test_imgs/`
 
 
+### Comparison
+We compare the generated images of different combination of generators and discriminators
+
+| mnist  | gan | wgan|  
+| -------|:-------------------------------------------------------------------------------:|-----------------------------------------------------------------------------: |
+| dc_dc  | ![gan](./output/test_imgs/dc_dc_mnist/gan_test_generated_imgs_iter_20000.jpg)   |![wgan](./output/test_imgs/dc_dc_mnist/wgan_test_generated_imgs_iter_20000.jpg)|
+| mlp_dc | ![gan](./output/test_imgs/mlp_dc_mnist/gan_test_generated_imgs_iter_20000.jpg)  |![wgan](./output/test_imgs/mlp_dc_mnist/wgan_test_generated_imgs_iter_20000.jpg)|
+| dc_mlp | ![gan](./output/test_imgs/dc_mlp_mnist/gan_test_generated_imgs_iter_20000.jpg)  |![wgan](./output/test_imgs/dc_mlp_mnist/wgan_test_generated_imgs_iter_20000.jpg)|
+| mlp_mlp| ![gan](./output/test_imgs/mlp_mlp_mnist/gan_test_generated_imgs_iter_20000.jpg) |![wgan](./output/test_imgs/mlp_mlp_mnist/wgan_test_generated_imgs_iter_20000.jpg)|
+
+
+| lsun  | gan | wgan|  
+| -------|:-------------------------------------------------------------------------------:|-----------------------------------------------------------------------------: |
+| dc_dc  | ![gan](./output/test_imgs/dc_dc_lsun/gan_test_generated_imgs_iter_100000.jpg)   |![wgan](./output/test_imgs/dc_dc_lsun/wgan_test_generated_imgs_iter_200000.jpg)|
+| mlp_dc | ![gan](./output/test_imgs/mlp_dc_lsun/gan_test_generated_imgs_iter_200000.jpg)  |![wgan](./output/test_imgs/mlp_dc_lsun/wgan_test_generated_imgs_iter_100000.jpg)|
+| dc_mlp | ![gan](./output/test_imgs/dc_mlp_lsun/gan_test_generated_imgs_iter_200000.jpg)  |![wgan](./output/test_imgs/dc_mlp_lsun/wgan_test_generated_imgs_iter_200000.jpg)|
+| mlp_mlp| ![gan](./output/test_imgs/mlp_mlp_lsun/gan_test_generated_imgs_iter_200000.jpg) |![wgan](./output/test_imgs/mlp_mlp_lsun/wgan_test_generated_imgs_iter_5000.jpg)|
+
+
+
 ### Acknowledgement
 https://github.com/fyu/lsun  
 https://github.com/eriklindernoren/PyTorch-GAN  

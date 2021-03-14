@@ -8,8 +8,8 @@ from torchvision.utils import save_image
 from models.G_D import GeneratorDC, GeneratorMLP, DiscriminatorDCstandard, DiscriminatorMLPstandard, weights_init_normal
 
 
-def train(dataloader, args, datasetname):
-    output_dir = "./output/gan/" + str(args.lr)+'_'+args.generator_type+'_'+args.discriminator_type+'_'+datasetname
+def train(dataloader, args):
+    output_dir = "./output/gan/" + str(args.lr)+'_'+args.generator_type+'_'+args.discriminator_type+'_'+args.datasetname
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     # Loss function
@@ -45,10 +45,12 @@ def train(dataloader, args, datasetname):
             discriminator.load_state_dict(discriminator_state)
         else:
             raise NotImplementedError("Discriminator checkpoint does not exist")
+        finished_batches = int(args.ressume_generator.split('/')[-1].split('_')[0])  # get the batches number from the saved model
     else:
         print("Training from scratch")
         generator.apply(weights_init_normal)
         discriminator.apply(weights_init_normal)
+        finished_batches = 0
 
 
     # optimizer
@@ -65,7 +67,7 @@ def train(dataloader, args, datasetname):
 
 
     # start train
-    batches_done = 0
+
     generator.train()
     discriminator.train()
     for epoch in range(args.n_epochs):
@@ -112,10 +114,10 @@ def train(dataloader, args, datasetname):
                 "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]"
                 % (epoch, args.n_epochs, i, len(dataloader), d_loss.item(), g_loss.item())
             )
-            batches_done = epoch * len(dataloader) + i
-            if batches_done % args.sample_interval == 0:
+            batches_done = epoch * len(dataloader) + i + finished_batches
+            if batches_done % 5000 == 0:
                 save_image(gen_imgs.data[:25], os.path.join(output_dir,f"{batches_done}_lossd_{d_loss}_loss_g_{g_loss}.jpg"), nrow=5, normalize=True)
-            if batches_done % args.sample_interval == 0:
+            if batches_done % 50000 == 0:
                 torch.save(generator.state_dict(),
                            os.path.join(output_dir, f"{batches_done}_gan_generator_checkpoint.pt"))
                 torch.save(discriminator.state_dict(),
@@ -123,9 +125,12 @@ def train(dataloader, args, datasetname):
 
 
 
-def test(args, datasetname):
+def test(args):
+    '''
+    This function generate images with a give sample
+    '''
     # args.resume_generator = './output/gan/dc_dc_lsun/10000_gan_generator_checkpoint.pt'
-    output_dir = "./output/gan/" + args.generator_type+'_'+args.discriminator_type+'_'+datasetname + '/test_imgs/'
+    output_dir = "./output/gan/" + args.generator_type+'_'+args.discriminator_type+'_'+args.datasetname + '/test_imgs/'
     if not os.path.isdir(output_dir):
         os.makedirs(output_dir)
     image_shape = (args.channels, args.img_size, args.img_size)
@@ -153,3 +158,71 @@ def test(args, datasetname):
     z = Variable(Tensor(np.random.normal(0, 1, (25, args.latent_dim))))
     gen_imgs = generator(z)
     save_image(gen_imgs.data, os.path.join(output_dir, f"test_generated_imgs_iter_{num_iter}.jpg"), nrow=5, normalize=True)
+    
+def test_all_models(args):
+    '''
+    This function test various combinations of generators and discriminators using the same noise
+    Before you run this function, you should have prepared the all the models under ./output
+    '''
+
+    # generate a noise variable
+    Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor
+    z = Variable(Tensor(np.random.normal(0, 1, (25, args.latent_dim))))
+    model_root_dir = '../output/gan/'
+    if args.datasetname == 'mnist':
+        models = {'dc_dc': os.path.join(model_root_dir, '0.0002_dc_dc_mnist', '20000_gan_generator_checkpoint.pt'),
+                  'mlp_dc': os.path.join(model_root_dir, '0.0002_mlp_dc_mnist', '20000_gan_generator_checkpoint.pt'),
+                  'dc_mlp': os.path.join(model_root_dir, '0.0002_dc_mlp_mnist', '20000_gan_generator_checkpoint.pt'),
+                  'mlp_mlp': os.path.join(model_root_dir, '0.0002_mlp_mlp_mnist', '20000_gan_generator_checkpoint.pt')
+                  }
+    elif args.datasetname == 'lsun':
+        models = {'dc_dc':os.path.join(model_root_dir, '0.0002_dc_dc_lsun', '100000_gan_generator_checkpoint.pt'),
+                  'mlp_dc':os.path.join(model_root_dir, '0.0002_mlp_dc_lsun', '200000_gan_generator_checkpoint.pt'),
+                  'dc_mlp':os.path.join(model_root_dir, '0.0002_dc_mlp_lsun', '200000_gan_generator_checkpoint.pt'),
+                  'mlp_mlp': os.path.join(model_root_dir, '0.0002_mlp_mlp_lsun', '200000_gan_generator_checkpoint.pt'),
+                  }
+    else:
+        raise NotImplementedError("Dataset does not exist, args.datasetname in [lsun, mnist]")
+
+    for k in models:
+        model_path = models[k]
+        print(model_path)
+        generator_type = k.split('_')[0]
+        discriminator_type = k.split('_')[1]
+
+        image_shape = (args.channels, args.img_size, args.img_size)
+        if generator_type == 'mlp':
+            generator = GeneratorMLP(args.latent_dim, image_shape)
+        elif generator_type == 'dc':
+            generator = GeneratorDC(args.latent_dim, image_shape)
+        else:
+            raise NotImplementedError("the generator_type should be mlp or dc")
+        if torch.cuda.is_available():
+            generator.cuda()
+        if not os.path.isfile(model_path):
+            raise NotImplementedError("generator file does not exist")
+        num_iter = model_path.split('/')[-1].split('_')[0]
+
+        print('loading state dict')
+        state_dict = torch.load(model_path)
+        # print(state_dict)
+        generator.load_state_dict(state_dict)
+        generator.eval()
+        print("model loaded")
+        gen_imgs = generator(z)
+        output_dir = "../output/gan/" + 'test_imgs/' + generator_type + '_' + discriminator_type + '_' + args.datasetname
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
+        save_image(gen_imgs.data, os.path.join(output_dir, f"test_generated_imgs_iter_{num_iter}.jpg"), nrow=5,
+                   normalize=True)
+
+
+if __name__ == '__main__':
+    from args import gan_args
+    parser = gan_args()
+    args = parser.parse_args()
+    args.datasetname = 'mnist'
+    args.channels = 1
+    test_all_models(args)
+
+

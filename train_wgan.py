@@ -29,13 +29,13 @@ def main(args):
     model_type = args.model_type
     print(model_type, args.generator_type, args.discriminator_type)
     if model_type == 'gan':
-        gan.train(dataloader, args, args.datasetname)
+        gan.train(dataloader, args)
     elif model_type == 'wgan':
-        wgan.train(dataloader, args,args.datasetname)
+        wgan.train(dataloader, args)
     else:
         raise NotImplementedError("the model type is currently not available. please choose model type as gan/dcgan/wgan")
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+    # os.environ["CUDA_VISIBLE_DEVICES"] = '1'
     parser = wgan_args()
     args = parser.parse_args()
     main(args)
