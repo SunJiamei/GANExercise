@@ -50,7 +50,7 @@ def test_all_models(args):
                   'dc_mlp_gan':os.path.join(model_root_dir,'gan', '0.0002_dc_mlp_lsun', '200000_gan_generator_checkpoint.pt'),
                   'mlp_mlp_gan': os.path.join(model_root_dir,'gan', '0.0002_mlp_mlp_lsun', '200000_gan_generator_checkpoint.pt'),
                   'dc_dc_wgan':os.path.join(model_root_dir, 'wgan','5e-05_dc_dc_lsun', '200000_wgan_generator_checkpoint.pt'),
-                  'mlp_dc_wgan':os.path.join(model_root_dir, 'wgan','5e-05_mlp_dc_lsun', '100000_wgan_generator_checkpoint.pt'),
+                  'mlp_dc_wgan':os.path.join(model_root_dir, 'wgan','5e-05_mlp_dc_lsun', '200000_wgan_generator_checkpoint.pt'),
                   'dc_mlp_wgan':os.path.join(model_root_dir,'wgan', '5e-05_dc_mlp_lsun', '200000_wgan_generator_checkpoint.pt'),
                   # 'mlp_mlp': os.path.join(model_root_dir, '5e-06_dc_mlp_lsun', '200000_gan_generator_checkpoint.pt'),
                   }
