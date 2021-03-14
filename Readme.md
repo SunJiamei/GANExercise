@@ -47,7 +47,9 @@ The generated images are saved under `./output/<model type>/<generator type>_<di
 
 
 ### Comparison
-We compare the generated images of different combination of generators and discriminators
+We compare the generated images of different combination of generators and discriminators  
+We trained 20000 iterations on MNIST and 200000 iterations on LSUN dataset.  
+All the images are resized to 64\*64. The batch size is 64.  
 
 | mnist  | gan | wgan|  
 | -------|:-------------------------------------------------------------------------------:|-----------------------------------------------------------------------------: |
@@ -60,11 +62,13 @@ We compare the generated images of different combination of generators and discr
 | lsun  | gan | wgan|  
 | -------|:-------------------------------------------------------------------------------:|-----------------------------------------------------------------------------: |
 | dc_dc  | ![gan](./output/test_imgs/dc_dc_lsun/gan_test_generated_imgs_iter_100000.jpg)   |![wgan](./output/test_imgs/dc_dc_lsun/wgan_test_generated_imgs_iter_200000.jpg)|
-| mlp_dc | ![gan](./output/test_imgs/mlp_dc_lsun/gan_test_generated_imgs_iter_200000.jpg)  |![wgan](./output/test_imgs/mlp_dc_lsun/wgan_test_generated_imgs_iter_100000.jpg)|
+| mlp_dc | ![gan](./output/test_imgs/mlp_dc_lsun/gan_test_generated_imgs_iter_200000.jpg)  |![wgan](./output/test_imgs/mlp_dc_lsun/wgan_test_generated_imgs_iter_200000.jpg)|
 | dc_mlp | ![gan](./output/test_imgs/dc_mlp_lsun/gan_test_generated_imgs_iter_200000.jpg)  |![wgan](./output/test_imgs/dc_mlp_lsun/wgan_test_generated_imgs_iter_200000.jpg)|
 | mlp_mlp| ![gan](./output/test_imgs/mlp_mlp_lsun/gan_test_generated_imgs_iter_200000.jpg) |![wgan](./output/test_imgs/mlp_mlp_lsun/wgan_test_generated_imgs_iter_5000.jpg)|
 
-
+Standard GAN_dc_dc will collapse after some iterations. For example, the standard GAN dc_dc_lsun model does not converge after 150000 iterations.  
+On the other hand, WGAN is more stable.
+The training of WGAN mlp_mlp_lsun failed, with a learning rate of 5e-5 or even a smaller one 5e-6.
 
 ### Acknowledgement
 https://github.com/fyu/lsun  
