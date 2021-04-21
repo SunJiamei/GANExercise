@@ -1,5 +1,5 @@
 A GAN Exercise
-========= 
+============== 
 
 This repo provides some sample code for training GAN networks. 
 
